@@ -1,0 +1,38 @@
+name: ChatAnnouncement
+version: ${version}
+main: com.example.announcement.ChatAnnouncement
+api-version: '1.21'
+author: Example
+description: A chat announcement plugin with click events
+
+commands:
+  announcement:
+    description: 公告命令
+    usage: /announcement <send|broadcast|template|reload|help>
+    aliases: [ann, notice]
+    permission: announcement.use
+
+permissions:
+  announcement.use:
+    description: 基础使用权限
+    default: true
+  announcement.send:
+    description: 发送公告权限
+    default: op
+  announcement.broadcast:
+    description: 广播公告权限
+    default: op
+  announcement.template:
+    description: 使用模板权限
+    default: op
+  announcement.reload:
+    description: 重载配置权限
+    default: op
+  announcement.admin:
+    description: 管理员权限
+    default: op
+    children:
+      announcement.send: true
+      announcement.broadcast: true
+      announcement.template: true
+      announcement.reload: true
