@@ -64,23 +64,31 @@ build/libs/ChatAnnouncement-1.0.0.jar
 - `/ann send <玩家\|all> <消息>`
 - `/notice broadcast <消息>`
 
-### 🖱️ 点击事件示例
+### 🖱️ 点击事件详解
 
-#### 1. 填充命令到聊天框
+本插件支持三种点击事件类型：
+
+| 类型 | 触发方式 | 是否需要确认 | 适用场景 |
+|------|---------|-------------|---------|
+| **suggest_command** | 填充到聊天框 | ✅ 需要按回车 | 需要玩家确认的操作 |
+| **run_command** | 立即执行 | ❌ 无需确认 | 安全的快速操作 |
+| **open_url** | 打开网页 | ❌ 无需确认 | 外部链接跳转 |
+
+#### 1. 填充命令到聊天框（suggest_command）
 ```yaml
-# 效果：点击后聊天框出现 /help 命令
+# 点击后聊天框出现 /help 命令，玩家按回车执行
 <click:suggest_command:'/help'><hover:show_text:'点击获取帮助'><gold>[帮助]</gold></click>
 ```
 
-#### 2. 直接执行命令
+#### 2. 直接执行命令（run_command）
 ```yaml
-# 效果：点击后立即执行 /spawn 命令
+# 点击后立即执行 /spawn 命令，传送到主城
 <click:run_command:'/spawn'><hover:show_text:'传送到主城'><gold>[传送]</gold></click>
 ```
 
-#### 3. 打开网页链接
+#### 3. 打开网页链接（open_url）
 ```yaml
-# 效果：点击后打开百度
+# 点击后打开百度
 <click:open_url:'https://www.baidu.com'><hover:show_text:'点击打开百度'><gold>[打开网页]</gold></click>
 ```
 
@@ -114,10 +122,10 @@ build/libs/ChatAnnouncement-1.0.0.jar
 
 ### 核心配置
 ```yaml
-# 公告前缀，支持渐变颜色
+# 公告前缀，会自动添加到每条公告消息前面
 prefix: "<gradient:#FFD700:#FFA500>[公告]</gradient> "
 
-# 预设模板
+# 预设模板，可以通过 /announcement template <模板名> <玩家|all> 使用
 templates:
   welcome:
     text: "<yellow>欢迎来到服务器！<click:suggest_command:'/register'><hover:show_text:'<green>点击注册账号'><gold>[点击注册]</gold></click></yellow>"
@@ -128,6 +136,13 @@ templates:
   vote:
     text: "<light_purple>支持服务器！<click:open_url:'https://example.com/vote'><hover:show_text:'<green>点击前往投票'><gold>[投票]</gold></click></light_purple>"
 ```
+
+### 如何新增模板
+1. 打开配置文件 `plugins/ChatAnnouncement/config.yml`
+2. 在 `templates:` 部分添加新模板
+3. 保存配置文件
+4. 执行 `/announcement reload` 重载配置
+5. 使用模板 `/announcement template <模板名> <玩家|all>`
 
 ### 权限配置
 
