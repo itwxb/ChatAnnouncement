@@ -4,6 +4,7 @@ main: com.example.announcement.ChatAnnouncement
 api-version: '1.21'
 author: Example
 description: A chat announcement plugin with click events
+softdepend: [AuthMe]
 
 commands:
   announcement:

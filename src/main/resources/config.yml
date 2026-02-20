@@ -17,3 +17,8 @@ example:
   suggest_command: "<white>点击 <click:suggest_command:'/help'><hover:show_text:'点击后聊天框会出现 /help'><gold>[填充命令]</gold></click> 测试</white>"
   run_command: "<white>点击 <click:run_command:'/spawn'><hover:show_text:'点击后执行 /spawn'><gold>[执行命令]</gold></click> 传送到主城</white>"
   open_url: "<white>点击 <click:open_url:'https://www.baidu.com'><hover:show_text:'点击打开百度'><gold>[打开网页]</gold></click> 访问官网</white>"
+
+authme:
+  enabled: true
+  unregistered-message: "<yellow>欢迎来到服务器！请点击 <click:suggest_command:'/register 密码 确认密码'><hover:show_text:'<green>点击注册账号'><gold>[注册]</gold></click> 完成注册</yellow>"
+  register-broadcast: "<gradient:#FFD700:#FFA500>[欢迎]</gradient> <white>欢迎 <gold>%player%</gold> 加入梦想之都服务器！点击 <click:suggest_command:'欢迎 %player%，我是 %sender%，一起游玩吧！'><hover:show_text:'<green>点击发送欢迎消息'><gold>[欢迎]</gold></click> 欢迎新玩家！</white>"

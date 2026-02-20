@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.example"
-version = "1.0.0"
+version = "1.1.0"
 
 java {
     toolchain {
@@ -15,10 +15,12 @@ java {
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
+    maven("https://repo.codemc.io/repository/maven-public/")
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.1-R0.1-SNAPSHOT")
+    compileOnly("fr.xephi:authme:5.6.0-SNAPSHOT")
 }
 
 tasks.processResources {
