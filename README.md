@@ -41,7 +41,7 @@ git clone https://gitee.com/yourusername/chatannouncement.git
 cd chatannouncement
 
 # 构建项目
-./gradlew build
+gradle build
 
 # 插件文件位于
 build/libs/ChatAnnouncement-1.0.0.jar
