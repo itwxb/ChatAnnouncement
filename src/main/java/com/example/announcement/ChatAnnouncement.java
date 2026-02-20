@@ -31,7 +31,7 @@ public class ChatAnnouncement extends JavaPlugin {
         } else {
             getLogger().info("未检测到 AuthMe 插件，注册监听器未启用。");
         }
-        
+         
         getLogger().info("ChatAnnouncement 插件已启用!");
     }
 
