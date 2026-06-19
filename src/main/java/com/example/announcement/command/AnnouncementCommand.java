@@ -1,204 +1,206 @@
 package com.example.announcement.command;
 
 import com.example.announcement.ChatAnnouncement;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.minimessage.MiniMessage;
-import org.bukkit.Bukkit;
+import com.example.announcement.config.ConfigService;
+import com.example.announcement.service.I18nService;
+import com.example.announcement.service.MessageService;
+import com.example.announcement.service.TargetResolver;
+import com.example.announcement.service.TemplateService;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
-public class AnnouncementCommand implements CommandExecutor, TabCompleter {
+/**
+ * 公告命令：仅做参数解析与子命令分发，所有业务逻辑委派给 Service 层。
+ */
+public final class AnnouncementCommand implements CommandExecutor, TabCompleter {
 
     private final ChatAnnouncement plugin;
-    private final MiniMessage miniMessage;
+    private final ConfigService config;
+    private final MessageService messageService;
+    private final TemplateService templateService;
+    private final TargetResolver targetResolver;
+    private final I18nService i18n;
 
-    public AnnouncementCommand(ChatAnnouncement plugin) {
+    public AnnouncementCommand(@NotNull ChatAnnouncement plugin,
+                               @NotNull ConfigService config,
+                               @NotNull MessageService messageService,
+                               @NotNull TemplateService templateService,
+                               @NotNull TargetResolver targetResolver,
+                               @NotNull I18nService i18n) {
         this.plugin = plugin;
-        this.miniMessage = MiniMessage.miniMessage();
+        this.config = config;
+        this.messageService = messageService;
+        this.templateService = templateService;
+        this.targetResolver = targetResolver;
+        this.i18n = i18n;
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command,
+                             @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) {
             sendHelp(sender);
             return true;
         }
 
-        String subCommand = args[0].toLowerCase();
-
-        switch (subCommand) {
-            case "send":
-                return handleSend(sender, args);
-            case "broadcast":
-                return handleBroadcast(sender, args);
-            case "template":
-                return handleTemplate(sender, args);
-            case "reload":
-                return handleReload(sender);
-            case "help":
+        String sub = args[0].toLowerCase(Locale.ROOT);
+        return switch (sub) {
+            case "send" -> handleSend(sender, args);
+            case "broadcast" -> handleBroadcast(sender, args);
+            case "template" -> handleTemplate(sender, args);
+            case "reload" -> handleReload(sender);
+            case "help" -> {
                 sendHelp(sender);
-                return true;
-            default:
-                sender.sendMessage(miniMessage.deserialize("<red>未知命令! 使用 /announcement help 查看帮助"));
-                return true;
-        }
+                yield true;
+            }
+            default -> {
+                i18n.send(sender, "cmd.unknown");
+                yield true;
+            }
+        };
     }
+
+    // -- 子命令处理 ------------------------------------------------------------
 
     private boolean handleSend(CommandSender sender, String[] args) {
         if (!sender.hasPermission("announcement.send")) {
-            sender.sendMessage(miniMessage.deserialize("<red>你没有权限执行此命令!"));
+            i18n.send(sender, "cmd.no-permission");
             return true;
         }
-
         if (args.length < 3) {
-            sender.sendMessage(miniMessage.deserialize("<red>用法: /announcement send <玩家|all> <消息>"));
+            i18n.send(sender, "cmd.usage.send");
             return true;
         }
-
         String target = args[1];
-        String message = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
-
-        if (target.equalsIgnoreCase("all")) {
-            Component component = plugin.getMessageManager().parseMessage(message);
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                player.sendMessage(component);
-            }
-            sender.sendMessage(miniMessage.deserialize("<green>公告已发送给所有玩家!"));
-        } else {
-            Player player = Bukkit.getPlayer(target);
-            if (player == null) {
-                sender.sendMessage(miniMessage.deserialize("<red>玩家 " + target + " 不在线!"));
-                return true;
-            }
-            Component component = plugin.getMessageManager().parseMessage(message);
-            player.sendMessage(component);
-            sender.sendMessage(miniMessage.deserialize("<green>公告已发送给 " + target + "!"));
+        String message = joinArgs(args, 2);
+        var result = targetResolver.resolve(target);
+        if (result.isEmpty()) {
+            i18n.send(sender, "cmd.player-not-found", target);
+            return true;
         }
-
+        for (Player p : result.players()) {
+            p.sendMessage(messageService.parseWithPrefix(message, p));
+        }
+        if (result.type() == TargetResolver.Result.Type.ALL) {
+            i18n.send(sender, "cmd.send.all.ok");
+        } else {
+            i18n.send(sender, "cmd.send.single.ok", target);
+        }
         return true;
     }
 
     private boolean handleBroadcast(CommandSender sender, String[] args) {
         if (!sender.hasPermission("announcement.broadcast")) {
-            sender.sendMessage(miniMessage.deserialize("<red>你没有权限执行此命令!"));
+            i18n.send(sender, "cmd.no-permission");
             return true;
         }
-
         if (args.length < 2) {
-            sender.sendMessage(miniMessage.deserialize("<red>用法: /announcement broadcast <消息>"));
+            i18n.send(sender, "cmd.usage.broadcast");
             return true;
         }
-
-        String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-        Component component = plugin.getMessageManager().parseMessage(message);
-
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            player.sendMessage(component);
+        String message = joinArgs(args, 1);
+        for (Player p : plugin.getServer().getOnlinePlayers()) {
+            p.sendMessage(messageService.parseWithPrefix(message, p));
         }
-
-        sender.sendMessage(miniMessage.deserialize("<green>公告已广播给所有玩家!"));
+        i18n.send(sender, "cmd.broadcast.ok");
         return true;
     }
 
     private boolean handleTemplate(CommandSender sender, String[] args) {
         if (!sender.hasPermission("announcement.template")) {
-            sender.sendMessage(miniMessage.deserialize("<red>你没有权限执行此命令!"));
+            i18n.send(sender, "cmd.no-permission");
             return true;
         }
-
         if (args.length < 3) {
-            sender.sendMessage(miniMessage.deserialize("<red>用法: /announcement template <模板名> <玩家|all>"));
+            i18n.send(sender, "cmd.usage.template");
             return true;
         }
-
-        String templateName = args[1];
+        String name = args[1];
         String target = args[2];
-
-        String template = plugin.getConfig().getString("templates." + templateName + ".text");
-        if (template == null) {
-            sender.sendMessage(miniMessage.deserialize("<red>模板 " + templateName + " 不存在!"));
+        String resolved = templateService.resolve(name, null);
+        if (resolved == null) {
+            i18n.send(sender, "cmd.template.not-found", name);
             return true;
         }
-
-        Component component = plugin.getMessageManager().parseMessage(template);
-
-        if (target.equalsIgnoreCase("all")) {
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                player.sendMessage(component);
-            }
-            sender.sendMessage(miniMessage.deserialize("<green>模板公告已发送给所有玩家!"));
-        } else {
-            Player player = Bukkit.getPlayer(target);
-            if (player == null) {
-                sender.sendMessage(miniMessage.deserialize("<red>玩家 " + target + " 不在线!"));
-                return true;
-            }
-            player.sendMessage(component);
-            sender.sendMessage(miniMessage.deserialize("<green>模板公告已发送给 " + target + "!"));
+        var result = targetResolver.resolve(target);
+        if (result.isEmpty()) {
+            i18n.send(sender, "cmd.player-not-found", target);
+            return true;
         }
-
+        for (Player p : result.players()) {
+            String personalized = templateService.resolve(name, p.getName());
+            p.sendMessage(messageService.parseWithPrefix(
+                    personalized == null ? resolved : personalized, p));
+        }
+        if (result.type() == TargetResolver.Result.Type.ALL) {
+            i18n.send(sender, "cmd.template.all.ok", name);
+        } else {
+            i18n.send(sender, "cmd.template.single.ok", name, target);
+        }
         return true;
     }
 
     private boolean handleReload(CommandSender sender) {
         if (!sender.hasPermission("announcement.reload")) {
-            sender.sendMessage(miniMessage.deserialize("<red>你没有权限执行此命令!"));
+            i18n.send(sender, "cmd.no-permission");
             return true;
         }
-
-        plugin.reloadConfig();
-        sender.sendMessage(miniMessage.deserialize("<green>配置文件已重新加载!"));
+        try {
+            config.reload();
+        } catch (Exception ex) {
+            plugin.getLogger().warning("配置重载失败: " + ex.getMessage());
+        }
+        i18n.send(sender, "cmd.reload.ok");
         return true;
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(miniMessage.deserialize("<gradient:#FFD700:#FFA500>========== ChatAnnouncement 帮助 ==========</gradient>"));
-        sender.sendMessage(miniMessage.deserialize("<yellow>/announcement send <玩家|all> <消息></yellow> <gray>- 发送公告给指定玩家或所有人</gray>"));
-        sender.sendMessage(miniMessage.deserialize("<yellow>/announcement broadcast <消息></yellow> <gray>- 广播公告给所有玩家</gray>"));
-        sender.sendMessage(miniMessage.deserialize("<yellow>/announcement template <模板名> <玩家|all></yellow> <gray>- 使用模板发送公告</gray>"));
-        sender.sendMessage(miniMessage.deserialize("<yellow>/announcement reload</yellow> <gray>- 重载配置文件</gray>"));
-        sender.sendMessage(miniMessage.deserialize("<yellow>/announcement help</yellow> <gray>- 显示此帮助信息</gray>"));
-        sender.sendMessage(miniMessage.deserialize("<gradient:#FFD700:#FFA500>========================================</gradient>"));
-        sender.sendMessage(miniMessage.deserialize("<green>点击事件示例:"));
-        sender.sendMessage(miniMessage.deserialize("<white>  <click:suggest_command:'/help'><hover:show_text:'点击获取帮助'><gold>[点击填充命令]</gold></click>"));
-        sender.sendMessage(miniMessage.deserialize("<white>  <click:run_command:'/spawn'><hover:show_text:'传送到主城'><gold>[点击执行命令]</gold></click>"));
+        i18n.send(sender, "cmd.help.header");
+        i18n.send(sender, "cmd.help.send");
+        i18n.send(sender, "cmd.help.broadcast");
+        i18n.send(sender, "cmd.help.template");
+        i18n.send(sender, "cmd.help.reload");
+        i18n.send(sender, "cmd.help.help");
+        i18n.send(sender, "cmd.help.footer");
     }
 
+    private static String joinArgs(String[] args, int from) {
+        return String.join(" ", Arrays.copyOfRange(args, from, args.length));
+    }
+
+    // -- Tab 补全 --------------------------------------------------------------
+
     @Override
-    public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command,
+                                      @NotNull String alias, @NotNull String[] args) {
         List<String> completions = new ArrayList<>();
-
         if (args.length == 1) {
-            completions.addAll(Arrays.asList("send", "broadcast", "template", "reload", "help"));
+            completions.addAll(List.of("send", "broadcast", "template", "reload", "help"));
         } else if (args.length == 2) {
-            if (args[0].equalsIgnoreCase("send")) {
+            if ("send".equalsIgnoreCase(args[0])) {
                 completions.add("all");
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    completions.add(player.getName());
-                }
-            } else if (args[0].equalsIgnoreCase("template")) {
-                completions.addAll(plugin.getConfig().getConfigurationSection("templates").getKeys(false));
+                plugin.getServer().getOnlinePlayers().forEach(p -> completions.add(p.getName()));
+            } else if ("template".equalsIgnoreCase(args[0])) {
+                completions.addAll(templateService.list());
             }
-        } else if (args.length == 3) {
-            if (args[0].equalsIgnoreCase("template")) {
-                completions.add("all");
-                for (Player player : Bukkit.getOnlinePlayers()) {
-                    completions.add(player.getName());
-                }
-            }
+        } else if (args.length == 3 && "template".equalsIgnoreCase(args[0])) {
+            completions.add("all");
+            plugin.getServer().getOnlinePlayers().forEach(p -> completions.add(p.getName()));
         }
-
-        String lastArg = args[args.length - 1].toLowerCase();
+        String last = args[args.length - 1].toLowerCase(Locale.ROOT);
         return completions.stream()
-                .filter(s -> s.toLowerCase().startsWith(lastArg))
+                .filter(s -> s.toLowerCase(Locale.ROOT).startsWith(last))
+                .distinct()
                 .collect(Collectors.toList());
     }
 }

@@ -1,17 +1,23 @@
-prefix: "<gradient:#FFD700:#FFA500>[公告]</gradient> "
+prefix: "<gradient:#FF0000:#FF5555><bold>[公告]</bold></gradient> "
 
 templates:
   welcome:
     text: "<yellow>欢迎来到服务器！<click:suggest_command:'/register'><hover:show_text:'<green>点击注册账号'><gold>[点击注册]</gold></click></yellow>"
-  
+
+  welcome_new:
+    text: "<light_purple><bold><click:suggest_command:'欢迎新的小伙伴来到梦想之都！'><hover:show_text:'<green>点击发送欢迎语'><yellow>欢迎新的小伙伴来到梦想之都！</yellow><gold>[发送欢迎语]</gold></click></bold></light_purple>"
+
   spawn:
     text: "<green>点击 <click:run_command:'/spawn'><hover:show_text:'<aqua>传送到主城'><gold>[传送]</gold></click> 返回主城</green>"
-  
+
   help:
     text: "<white>需要帮助？<click:suggest_command:'/help'><hover:show_text:'<yellow>点击获取帮助'><gold>[帮助]</gold></click> <click:run_command:'/rules'><hover:show_text:'<yellow>查看服务器规则'><gold>[规则]</gold></click></white>"
-  
+
   vote:
     text: "<light_purple>支持服务器！<click:open_url:'https://example.com/vote'><hover:show_text:'<green>点击前往投票'><gold>[投票]</gold></click></light_purple>"
+
+  donation:
+    text: "<gradient:#FFD700:#FFA500>[赞助]</gradient> <white>感谢 <gold>大佬</gold> 赞助服务器！点击 <click:suggest_command:'感谢大佬赞助服务器！'><hover:show_text:'<green>点击发送感谢语'><gold>[感谢大佬]</gold></click> 送上祝福！</white>"
 
 example:
   suggest_command: "<white>点击 <click:suggest_command:'/help'><hover:show_text:'点击后聊天框会出现 /help'><gold>[填充命令]</gold></click> 测试</white>"
@@ -20,5 +26,5 @@ example:
 
 authme:
   enabled: true
-  unregistered-message: "<yellow>欢迎来到服务器！请点击 <click:suggest_command:'/register 密码 确认密码'><hover:show_text:'<green>点击注册账号'><gold>[注册]</gold></click> 完成注册</yellow>"
-  register-broadcast: "<gradient:#FFD700:#FFA500>[欢迎]</gradient> <white>欢迎 <gold>%player%</gold> 加入梦想之都服务器！点击 <click:suggest_command:'欢迎 %player%，我是 %sender%，一起游玩吧！'><hover:show_text:'<green>点击发送欢迎消息'><gold>[欢迎]</gold></click> 欢迎新玩家！</white>"
+  unregistered-message: "<yellow>欢迎来到梦想之都服务器！请点击 <click:suggest_command:'/register 密码 在输入一次密码'><hover:show_text:'<green>点击注册账号'><gold>[注册]</gold></click> 完成注册</yellow>"
+  register-broadcast: "<green>新成员</green> <white><gold>%player%</gold> 加入了梦想之都服务器！点击 <click:suggest_command:'欢迎 %player%，我是 %sender%，一起游玩吧！'><hover:show_text:'<green>点击发送欢迎消息'><gold>[打招呼]</gold></click> 欢迎新玩家！</white>"
