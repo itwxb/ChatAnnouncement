@@ -71,5 +71,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Make gradlew executable (Windows → Linux 跨平台提交)
+        run: chmod +x ./gradlew
+
       - name: Verify Coverage Thresholds
         run: ./gradlew jacocoTestCoverageVerification --no-daemon
