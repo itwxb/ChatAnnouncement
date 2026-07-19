@@ -95,7 +95,7 @@ tasks.jacocoTestCoverageVerification {
                               "com.example.announcement.config.*")
             limit {
                 counter = "INSTRUCTION"
-                value = "60%"
+                value = "COVEREDRATIO"  // 校验覆盖率（不是覆盖率绝对值）
                 minimum = BigDecimal("0.60")
             }
         }
