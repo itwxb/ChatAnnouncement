@@ -1,7 +1,6 @@
 # Gradle 构建工具
 .gradle/
 build/
-!gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
 
@@ -29,6 +28,9 @@ bin/
 *.nar
 hs_err_pid*
 replay_pid*
+
+# Gradle Wrapper jar 必须提交（但其他 jar 忽略）
+!gradle/wrapper/gradle-wrapper.jar
 
 # Maven 构建输出（如果误用）
 target/
